@@ -6,7 +6,7 @@ Same attack class as in Lab 1. Username enumeration is an information disclosure
 
 ### Impact
 
-On its own, username enumeration is a low-severity finding - the attacker only learns which accounts exist. However, it is almost always a - Stepping stone that dramatically increases the success rate of subsequent attacks:
+On its own, username enumeration is a low-severity finding - the attacker only learns which accounts exist. However, it is almost always a - - Stepping stone that dramatically increases the success rate of subsequent attacks:
 
 Targeted brute-force becomes feasible because the attacker no longer wastes attempts on non-existent accounts, and rate-limiting protections that block N attempts per username are easier to evade when the attacker knows exactly which usernames to target.
 - Credential stuffing attacks using leaked breach databases become more efficient.
@@ -42,15 +42,33 @@ Targeted brute-force becomes feasible because the attacker no longer wastes atte
 - Consider account-agnostic authentication flows (e.g., email-based magic links) for high-value accounts where username privacy matters.
 
 ## Solution writeup
-
- Goal: Log in to the victim account carlos using the username and password wordlists provided by PortSwigger.
+Goal: Log in to the victim account using the username and password wordlists provided by PortSwigger. Unlike the previous lab, the application does not reveal account existence through distinct error messages - the differences are subtle and require more careful analysis.
 
 - Step 1 - Capture the login request
-Submit a login attempt with dummy credentials while Burp Proxy is intercepting. Locate the POST /login request in the HTTP history and send it to Intruder.
+Submit a login attempt with dummy credentials while Burp Proxy is intercepting. Locate the POST /login request in HTTP history and send it to Intruder (Ctrl+I).
 - Step 2 - Enumerate valid usernames
-In Intruder, set the attack type to Sniper, mark the username parameter as the payload position, and load PortSwigger's candidate username wordlist. Launch the attack and sort the results by Length. One response stands out with a different length - its body contains "Incorrect password" instead of "Invalid username", confirming the username exists.
+
+In Intruder:
+
+Attack type: Sniper
+Payload position: username=§invalid§&password=test
+Payload list: PortSwigger's candidate usernames
+
+Launch the attack. Since the error message is visually identical for every failure, sort the results by Length and look for anomalies. One response is a few bytes longer than the rest - the difference is caused by a minor variation in the returned error string (e.g., a trailing period or whitespace). That payload is the valid username.
+![Password](images/lab-2-username.png)
+
 - Step 3 - Brute-force the password
-Send a new POST /login to Intruder with the discovered username fixed. Mark password as the payload position and load PortSwigger's candidate password list. After the attack completes, sort by Status code - the request returning 302 Found (redirect to the account page) instead of 200 OK reveals the correct password.
-Show Image
+Send a new POST /login to Intruder with the discovered username fixed:
+
+Attack type: Sniper
+Payload position: username=<found_username>&password=§invalid§
+Payload list: PortSwigger's candidate passwords
+
+After the attack completes, sort by Status code. The request returning 302 Found instead of 200 OK indicates a successful login and redirect to the account page.
+![Password](images/lab-2-password.png)
+
 - Step 4 - Log in and solve the lab
-Return to the login page and authenticate with the discovered credentials to solve the lab.
+Return to the login page and authenticate with the discovered credentials. The lab is marked solved.
+
+Key difference from Lab 1
+In the previous lab, different error messages ("Invalid username" vs "Incorrect password") made enumeration obvious. Here, the developers attempted a fix by standardizing the message - but failed to ensure byte-level identical responses. This is a common real-world failure pattern: partial remediation that removes the obvious signal while leaving a subtler one intact. Automated tools like Burp Intruder detect such differences instantly through the Length column.

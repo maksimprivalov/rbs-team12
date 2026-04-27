@@ -6,16 +6,13 @@ Username enumeration is an information disclosure brute-force attack where the a
 
 ### Impact
 
-On its own, username enumeration is a low-severity finding - the attacker only learns which accounts exist. However, it is almost always a stepping stone that dramatically increases the success rate of subsequent attacks:
+On its own, username enumeration is a low-severity finding - the attacker only learns which accounts exist. However, it is almost always a - Stepping stone that dramatically increases the success rate of subsequent attacks:
 
 Targeted brute-force becomes feasible because the attacker no longer wastes attempts on non-existent accounts, and rate-limiting protections that block N attempts per username are easier to evade when the attacker knows exactly which usernames to target.
 - Credential stuffing attacks using leaked breach databases become more efficient.
 - Privacy violations occur when the application's user base is sensitive (e.g., a medical or adult-content platform confirming a specific person is registered).
 - Social engineering becomes more credible when the attacker can reference a valid account in a phishing message.
 
-Screenshot from the step when we figured out the account's username and easily guessed the right password after:
-
-![Password](images/lab-1-password.png)
 
 ### Software weaknesses that enabled the attack
 
@@ -44,3 +41,17 @@ Screenshot from the step when we figured out the account's username and easily g
 - Apply the same uniform-response principle to password reset, registration ("this email is already taken" is the same leak), and account recovery endpoints.
 - Enforce strong password policies and encourage 2FA so that even a successfully enumerated + brute-forced password is not sufficient for account takeover.
 - Consider account-agnostic authentication flows (e.g., email-based magic links) for high-value accounts where username privacy matters.
+
+## Writeup - Solution
+
+ Goal: Log in to the victim account carlos using the username and password wordlists provided by PortSwigger.
+
+- Step 1 - Capture the login request
+Submit a login attempt with dummy credentials while Burp Proxy is intercepting. Locate the POST /login request in the HTTP history and send it to Intruder.
+- Step 2 - Enumerate valid usernames
+In Intruder, set the attack type to Sniper, mark the username parameter as the payload position, and load PortSwigger's candidate username wordlist. Launch the attack and sort the results by Length. One response stands out with a different length - its body contains "Incorrect password" instead of "Invalid username", confirming the username exists.
+- Step 3 - Brute-force the password
+Send a new POST /login to Intruder with the discovered username fixed. Mark password as the payload position and load PortSwigger's candidate password list. After the attack completes, sort by Status code - the request returning 302 Found (redirect to the account page) instead of 200 OK reveals the correct password.
+![Password](images/lab-1-password.png)
+- Step 4 - Log in and solve the lab
+Return to the login page and authenticate with the discovered credentials to solve the lab.

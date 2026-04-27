@@ -1,4 +1,4 @@
-## Lab 2, easy: CSRF where token validation depends on request method
+## Lab 2, medium: CSRF where token validation depends on request method
 
 ### Attack class
 
