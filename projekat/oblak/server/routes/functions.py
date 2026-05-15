@@ -1,20 +1,15 @@
-import os
 from datetime import datetime
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from config import settings
 from db import get_db
 from models import AuditLog, Function, FunctionFile, FunctionStatus, User
 from security import get_current_user
+from storage import save_function_files
 
 router = APIRouter(prefix="/functions", tags=["functions"])
-
-ALLOWED_FILENAMES = {"main.py", "requirements.txt"}
 
 
 class FunctionResponse(BaseModel):
@@ -35,9 +30,6 @@ async def upload_function(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Function:
-    if not file.filename or not file.filename.endswith(".py"):
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Only .py files are accepted")
-
     func = Function(
         user_id=current_user.id,
         name=name,
@@ -47,25 +39,14 @@ async def upload_function(
     db.add(func)
     db.flush()
 
-    storage_dir = Path(settings.storage_path) / str(current_user.id) / str(func.id)
-    storage_dir.mkdir(parents=True, exist_ok=True)
-
-    saved_files = []
-    for upload, target_name in [(file, "main.py"), (requirements, "requirements.txt")]:
-        if upload is None:
-            continue
-        content = await upload.read()
-        if len(content) > settings.max_file_size_bytes:
-            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File too large (max 10MB)")
-        dest = storage_dir / target_name
-        dest.write_bytes(content)
-        db.add(FunctionFile(function_id=func.id, filename=target_name, storage_path=str(dest)))
-        saved_files.append(target_name)
+    saved = await save_function_files(current_user.id, func.id, file, requirements)
+    for filename, storage_path in saved:
+        db.add(FunctionFile(function_id=func.id, filename=filename, storage_path=storage_path))
 
     db.add(AuditLog(
         user_id=current_user.id,
         action="FUNCTION_UPLOAD",
-        details=f"function_id={func.id} name={name} files={saved_files}",
+        details=f"function_id={func.id} name={name} files={[f for f, _ in saved]}",
         timestamp=datetime.utcnow(),
     ))
     db.commit()
