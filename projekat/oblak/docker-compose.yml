@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+    environment:
+      - DATABASE_URL=sqlite:///./oblak.db
+      - SECRET_KEY=dev-secret-change-in-prod
+      - STORAGE_PATH=/app/storage
+    depends_on: []
+    restart: unless-stopped
+
+  # Uncomment when switching to PostgreSQL:
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_USER: oblak
+  #     POSTGRES_PASSWORD: oblak
+  #     POSTGRES_DB: oblak
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:
