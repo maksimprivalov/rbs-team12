@@ -1,4 +1,4 @@
-# Arhitektura sistema — Oblak
+# Arhitektura sistema - Oblak
 
 ## Pregled
 
@@ -43,10 +43,10 @@ Oblak je serverless platforma za izvršavanje Python koda. Korisnik putem CLI-ja
 - Komunicira sa serverom isključivo preko HTTP/JSON
 
 ### Server (`server/`)
-- **FastAPI** — async HTTP framework
-- **SQLAlchemy + Alembic** — ORM i migracije
-- **JWT Bearer** — autentikacija (HS256, 60 min expiry)
-- **passlib/bcrypt** — hash lozinki
+- **FastAPI** - async HTTP framework
+- **SQLAlchemy + Alembic** - ORM i migracije
+- **JWT Bearer** - autentikacija (HS256, 60 min expiry)
+- **passlib/bcrypt** - hash lozinki
 
 ### Baza podataka
 
@@ -62,18 +62,18 @@ Oblak je serverless platforma za izvršavanje Python koda. Korisnik putem CLI-ja
 - Git-ignored, u Dockeru montiran kao volume
 - Validacija: samo `.py` i `requirements.txt`, max 10MB
 
-### Code Verifier (Član 2)
-- Bandit — statička analiza bezbednosti
-- LLM analiza — detekcija malicioznih obrazaca
+### Code Verifier
+- Bandit - statička analiza bezbednosti
+- LLM analiza - detekcija malicioznih obrazaca
 - Status funkcije: `PENDING → ANALYZING → SAFE / REJECTED`
 
-### Firecracker Orchestrator (Član 3)
+### Firecracker Orchestrator 
 - Svako izvršavanje = novi MicroVM
 - Inject koda u VM filesystem
 - Network izolacija, CPU/RAM/timeout limiti
 - Po završetku: VM se uništava
 
-## Tok zahteva — deploy i invoke
+## Tok zahteva - deploy i invoke
 
 ```
 1. oblak deploy hello.py
