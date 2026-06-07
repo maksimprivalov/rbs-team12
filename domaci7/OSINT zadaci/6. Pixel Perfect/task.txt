@@ -1,0 +1,3 @@
+6. Pixel Perfect
+	- Flag format : UNS{}
+	- Your college mate likes to take photos in his spare time. He recently sent you a picture of him and said he had something very important to tell you. Since then, there is no trace of him. Maybe you should take a closer look at the picture?

@@ -1,0 +1,3 @@
+4. Nigerian Prince
+	- Flag format : UNS{}
+	- Your friend received a very strange email. Since he knows you understand computers, he sent you the email's content and asked you to check if that email has any meaning or it's just another spam?
