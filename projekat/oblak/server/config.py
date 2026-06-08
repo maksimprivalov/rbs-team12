@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     storage_path: str = "./storage"
     max_file_size_bytes: int = 10 * 1024 * 1024  # 10MB
 
+    anthropic_api_key: str = ""
+
     class Config:
         env_file = ".env"
 

@@ -1,0 +1,2 @@
+8. Squid Game Invitation
+	- Flag format : NAVY{}

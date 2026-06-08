@@ -1,0 +1,3 @@
+2. PIRATES OF MEMORIAL
+	- Flag format : csictf{}
+	- The original photographer of this picture commented the flag on his post. Find the flag.

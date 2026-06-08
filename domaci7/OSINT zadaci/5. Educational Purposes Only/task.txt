@@ -1,0 +1,3 @@
+5. Educational Purposes Only
+	- Flag format : UNS{}
+	- Together with your friends, you browsed the web archive of the Faculty of Technical Sciences and came across some very old archive. You downloaded it to see what was inside, but it was locked. Along with it, you also found a file that you think can help you unlock the archive.

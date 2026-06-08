@@ -6,6 +6,8 @@ from routes.auth import router as auth_router
 from routes.functions import router as functions_router
 from routes.invoke import router as invoke_router
 
+from models.analysis import AnalysisResult # noqa: F401
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Oblak", description="Serverless Python execution platform", version="0.1.0")
