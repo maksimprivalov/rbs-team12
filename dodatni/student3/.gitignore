@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+app/uploads/
+app/flag.txt
+app/PWNED.txt
+*.tar.gz
