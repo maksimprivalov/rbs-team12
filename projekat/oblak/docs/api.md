@@ -145,13 +145,15 @@ Rezultati analize koda (Bandit + pylint + LLM).
 
 ## Izvršavanje
 
-### POST /invoke/{function_id}
+### POST /invoke/{token}
 
-Pokretanje funkcije. Funkcija mora biti u statusu `READY`.
+Pokretanje funkcije. `token` može biti:
+- Integer `function_id` (autentikovan korisnik, mora biti vlasnik)
+- UUID hex string iz `invoke_url` polja funkcije (autentikovan korisnik)
 
-**Response 501:** Not Implemented (do implementacije Firecrackkera)
+Funkcija mora biti u statusu `READY`. Svaki poziv se beleži u `audit_log`.
 
-**Planirani response 200:**
+**Response 200:**
 ```json
 {
   "output": "Hello from Oblak!\n",
@@ -160,7 +162,16 @@ Pokretanje funkcije. Funkcija mora biti u statusu `READY`.
 }
 ```
 
-**Greške:** `404` funkcija ne postoji, `409` status nije READY, `501` nije implementirano
+**Timeout response 200** (izvršavanje trajalo >30s):
+```json
+{
+  "output": "Execution timed out after 30 seconds.",
+  "exit_code": -1,
+  "duration_ms": 30012
+}
+```
+
+**Greške:** `401` nije autentikovan, `404` funkcija ne postoji, `409` status nije READY
 
 ---
 
@@ -168,9 +179,30 @@ Pokretanje funkcije. Funkcija mora biti u statusu `READY`.
 
 ### GET /admin/audit
 
-Lista svih audit log unosa. Samo admin korisnici.
+Lista svih audit log unosa, sortirana od najnovijeg ka najstarijem. Samo admin korisnici.
 
-**Greške:** `403` nije admin
+**Query parametri:**
+| Parametar | Tip | Default | Opis |
+|---|---|---|---|
+| `limit` | int | 100 | Broj unosa (1–1000) |
+| `offset` | int | 0 | Offset za paginaciju |
+
+**Response 200:**
+```json
+[
+  {
+    "id": 42,
+    "user_id": 1,
+    "action": "FUNCTION_INVOKE",
+    "details": "function_id=5 exit_code=0 duration_ms=132 timed_out=False",
+    "timestamp": "2025-01-01T12:05:00"
+  }
+]
+```
+
+**Akcije koje se beleže:** `REGISTER`, `LOGIN`, `LOGIN_FAILED`, `FUNCTION_UPLOAD`, `FUNCTION_ANALYSIS_REJECTED`, `FUNCTION_READY`, `FUNCTION_INVOKE`, `FUNCTION_ANALYSIS_ERROR`
+
+**Greške:** `401` nije autentikovan, `403` nije admin
 
 ---
 
