@@ -1,4 +1,4 @@
-# Izveštaj statičke analize — Oblak platforma
+﻿# Izveštaj statičke analize - Oblak platforma
 
 > Alati: Bandit 1.9.4, Safety  
 > Analiza pokrenuta: 2026-06-21  
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Bandit — bezbednosna analiza
+## 1. Bandit - bezbednosna analiza
 
 ### Pokretanje
 
@@ -31,7 +31,7 @@ python -m bandit -r server/ cli/ -f txt
 
 ### Detaljan pregled nalaza
 
-#### B404 — `import subprocess` (3 nalaza)
+#### B404 - `import subprocess` (3 nalaza)
 
 | Fajl | Linija | Opis |
 |---|---|---|
@@ -39,11 +39,11 @@ python -m bandit -r server/ cli/ -f txt
 | `server/services/sandbox.py` | 20 | Import subprocess modula |
 | `server/services/verifier.py` | 14 | Import subprocess modula |
 
-**Procena rizika:** PRIHVATLJIVO — `subprocess` se koristi namerno za pokretanje izoliranih procesa (sandbox executor, Bandit analiza, pip install). Svi pozivi koriste **list formu** (ne string + `shell=True`), što eliminiše shell injection rizik.
+**Procena rizika:** PRIHVATLJIVO - `subprocess` se koristi namerno za pokretanje izoliranih procesa (sandbox executor, Bandit analiza, pip install). Svi pozivi koriste **list formu** (ne string + `shell=True`), što eliminiše shell injection rizik.
 
 ---
 
-#### B603 — `subprocess call without shell=True` (4 nalaza)
+#### B603 - `subprocess call without shell=True` (4 nalaza)
 
 | Fajl | Linija | Poziv |
 |---|---|---|
@@ -52,15 +52,15 @@ python -m bandit -r server/ cli/ -f txt
 | `server/services/verifier.py` | 50 | `bandit -r <target>` |
 | `server/services/verifier.py` | 97 | `pylint <file>` |
 
-**Procena rizika:** PRIHVATLJIVO — Bandit upozorava kad god se koristi `subprocess` bez `shell=True`, ali to je zapravo sigurniji pristup. Svi argumenti su interno kontrolisani stringovi (putanje iz baze, konstantne komande) — nema korisničkog unosa koji se direktno prosleđuje kao argument.
+**Procena rizika:** PRIHVATLJIVO - Bandit upozorava kad god se koristi `subprocess` bez `shell=True`, ali to je zapravo sigurniji pristup. Svi argumenti su interno kontrolisani stringovi (putanje iz baze, konstantne komande) - nema korisničkog unosa koji se direktno prosleđuje kao argument.
 
 **Napomena za `pipeline.py:40` (`pip install`):** Putanja do `requirements.txt` dolazi iz internog storage path-a (konstruiše je server), ne iz direktnog korisničkog unosa. Prihvatljivo.
 
-**Napomena za `sandbox.py:89` (`python main.py`):** Ovo je srž sandbox izvršavanja — korisnikov kod se **ne prosleđuje kao argument** već se pokreće kao fajl u kopiranom direktorijumu. Nema injection vektora.
+**Napomena za `sandbox.py:89` (`python main.py`):** Ovo je srž sandbox izvršavanja - korisnikov kod se **ne prosleđuje kao argument** već se pokreće kao fajl u kopiranom direktorijumu. Nema injection vektora.
 
 ---
 
-#### B607 — `start_process_with_partial_path` (3 nalaza)
+#### B607 - `start_process_with_partial_path` (3 nalaza)
 
 | Fajl | Linija | Komanda |
 |---|---|---|
@@ -68,7 +68,7 @@ python -m bandit -r server/ cli/ -f txt
 | `server/services/verifier.py` | 50 | `bandit` |
 | `server/services/verifier.py` | 97 | `pylint` |
 
-**Procena rizika:** PRIHVATLJIVO u Docker kontekstu — `pip`, `bandit`, i `pylint` su instalirani u Docker image i dostupni na poznatom PATH-u. U produkciji preporučeno koristiti apsolutne putanje (`/usr/local/bin/pip` itd.) ili `sys.executable + "-m"` formu.
+**Procena rizika:** PRIHVATLJIVO u Docker kontekstu - `pip`, `bandit`, i `pylint` su instalirani u Docker image i dostupni na poznatom PATH-u. U produkciji preporučeno koristiti apsolutne putanje (`/usr/local/bin/pip` itd.) ili `sys.executable + "-m"` formu.
 
 **Rešenje (otvorena stavka):**
 ```python
@@ -81,13 +81,13 @@ python -m bandit -r server/ cli/ -f txt
 
 ---
 
-#### B110 — `try/except/pass` (1 nalaz)
+#### B110 - `try/except/pass` (1 nalaz)
 
 | Fajl | Linija | Opis |
 |---|---|---|
 | `server/services/sandbox.py` | 51 | Tiho ignorisanje greške pri postavljanju resource limita |
 
-**Procena rizika:** PRIHVATLJIVO — `resource` modul nije dostupan na Windows-u (lokalni razvoj). `pass` je svestan fallback: ako resource limiti nisu dostupni, timeout mehanizam (`subprocess timeout=30s`) preuzima ulogu. Komentar u kodu objašnjava razlog.
+**Procena rizika:** PRIHVATLJIVO - `resource` modul nije dostupan na Windows-u (lokalni razvoj). `pass` je svestan fallback: ako resource limiti nisu dostupni, timeout mehanizam (`subprocess timeout=30s`) preuzima ulogu. Komentar u kodu objašnjava razlog.
 
 ---
 
@@ -97,7 +97,7 @@ python -m bandit -r server/ cli/ -f txt
 
 ---
 
-## 2. Safety — poznate ranjivosti u zavisnostima
+## 2. Safety - poznate ranjivosti u zavisnostima
 
 ### Pokretanje
 
@@ -105,29 +105,29 @@ python -m bandit -r server/ cli/ -f txt
 python -m safety check -r server/requirements.txt
 ```
 
-### Rezultati — originalne verzije (pre popravke)
+### Rezultati - originalne verzije (pre popravke)
 
 Safety v3.8.1 pronašao je **6 ranjivosti u 2 paketa** u originalnim verzijama (`python-multipart==0.0.9`, `python-jose==3.3.0`).
 
-#### `python-multipart 0.0.9` — 4 ranjivosti
+#### `python-multipart 0.0.9` - 4 ranjivosti
 
 | CVE | Safety ID | Affected | Opis | Severity |
 |---|---|---|---|---|
-| CVE-2026-24486 | 85155 | <0.0.22 | Path Traversal — unsafe filesystem path construction | HIGH |
-| CVE-2026-42561 | SFTY-20260506-35099 | <0.0.27 | DoS — absence of limits on uploaded content | MEDIUM |
-| CVE-2024-53981 | 74427 | <0.0.18 | Resource exhaustion (CWE-770) — allocation without limits | MEDIUM |
-| CVE-2026-40347 | SFTY-20260415-68235 | <0.0.26 | DoS — inefficient handling of preamble data | MEDIUM |
+| CVE-2026-24486 | 85155 | <0.0.22 | Path Traversal - unsafe filesystem path construction | HIGH |
+| CVE-2026-42561 | SFTY-20260506-35099 | <0.0.27 | DoS - absence of limits on uploaded content | MEDIUM |
+| CVE-2024-53981 | 74427 | <0.0.18 | Resource exhaustion (CWE-770) - allocation without limits | MEDIUM |
+| CVE-2026-40347 | SFTY-20260415-68235 | <0.0.26 | DoS - inefficient handling of preamble data | MEDIUM |
 
-**Popravka:** Nadograđen na `python-multipart==0.0.27` u `requirements.txt`. ✅
+**Popravka:** Nadograđen na `python-multipart==0.0.27` u `requirements.txt`. [OK]
 
-#### `python-jose 3.3.0` — 2 ranjivosti
+#### `python-jose 3.3.0` - 2 ranjivosti
 
 | CVE | Safety ID | Affected | Opis | Severity |
 |---|---|---|---|---|
-| CVE-2024-33664 | 70716 | <3.4.0 | DoS — resource consumption during token decode | MEDIUM |
+| CVE-2024-33664 | 70716 | <3.4.0 | DoS - resource consumption during token decode | MEDIUM |
 | CVE-2024-33663 | 70715 | <3.4.0 | Algorithm confusion sa OpenSSH ECDSA ključevima | HIGH |
 
-**Popravka:** Nadograđen na `python-jose[cryptography]==3.4.0` u `requirements.txt`. ✅
+**Popravka:** Nadograđen na `python-jose[cryptography]==3.4.0` u `requirements.txt`. [OK]
 
 ### Status nakon popravke
 
@@ -137,24 +137,24 @@ Nakon nadogradnje oba paketa, Safety ne prijavljuje ranjivosti.
 
 | Paket | Verzija | Status |
 |---|---|---|
-| `fastapi` | 0.111.0 | ✅ Bez CVE |
-| `uvicorn[standard]` | 0.29.0 | ✅ Bez CVE |
-| `sqlalchemy` | 2.0.30 | ✅ Bez CVE |
-| `alembic` | 1.13.1 | ✅ Bez CVE |
-| `python-jose[cryptography]` | **3.4.0** | ✅ Nadograđen (bio 3.3.0) |
-| `passlib[bcrypt]` | 1.7.4 | ✅ Bez CVE |
-| `python-multipart` | **0.0.27** | ✅ Nadograđen (bio 0.0.9) |
-| `pydantic` | 2.7.1 | ✅ Bez CVE |
-| `pydantic-settings` | 2.2.1 | ✅ Bez CVE |
-| `aiofiles` | 23.2.1 | ✅ Bez CVE |
-| `bandit` | 1.7.9 | ✅ Bez CVE |
-| `pylint` | 3.2.0 | ✅ Bez CVE |
-| `httpx` | 0.27.0 | ✅ Bez CVE |
-| `bcrypt` | 4.0.1 | ✅ Bez CVE |
+| `fastapi` | 0.111.0 | [OK] Bez CVE |
+| `uvicorn[standard]` | 0.29.0 | [OK] Bez CVE |
+| `sqlalchemy` | 2.0.30 | [OK] Bez CVE |
+| `alembic` | 1.13.1 | [OK] Bez CVE |
+| `python-jose[cryptography]` | **3.4.0** | [OK] Nadograđen (bio 3.3.0) |
+| `passlib[bcrypt]` | 1.7.4 | [OK] Bez CVE |
+| `python-multipart` | **0.0.27** | [OK] Nadograđen (bio 0.0.9) |
+| `pydantic` | 2.7.1 | [OK] Bez CVE |
+| `pydantic-settings` | 2.2.1 | [OK] Bez CVE |
+| `aiofiles` | 23.2.1 | [OK] Bez CVE |
+| `bandit` | 1.7.9 | [OK] Bez CVE |
+| `pylint` | 3.2.0 | [OK] Bez CVE |
+| `httpx` | 0.27.0 | [OK] Bez CVE |
+| `bcrypt` | 4.0.1 | [OK] Bez CVE |
 
 ---
 
-## 3. Ručni pregled — dodatne napomene
+## 3. Ručni pregled - dodatne napomene
 
 ### 3.1 JWT konfiguracija
 
@@ -165,12 +165,12 @@ Nakon nadogradnje oba paketa, Safety ne prijavljuje ranjivosti.
 
 ### 3.2 Lozinke
 
-- bcrypt hashing — ispravno, work factor 12 (passlib default)
-- Minimalna dužina: 6 znakova — relativno slabo, preporučiti minimum 12
+- bcrypt hashing - ispravno, work factor 12 (passlib default)
+- Minimalna dužina: 6 znakova - relativno slabo, preporučiti minimum 12
 
 ### 3.3 SQL injection
 
-- SQLAlchemy ORM sa parametrizovanim upitima — bez SQL injection vektora
+- SQLAlchemy ORM sa parametrizovanim upitima - bez SQL injection vektora
 - Nema raw SQL stringa nigde u kodebaiji
 
 ### 3.4 Path traversal u storage
@@ -181,7 +181,7 @@ Nakon nadogradnje oba paketa, Safety ne prijavljuje ranjivosti.
 
 ### 3.5 Default admin korisnik
 
-- Seed skripta kreira `admin / admin123` — MORA se promeniti pre produkcije
+- Seed skripta kreira `admin / admin123` - MORA se promeniti pre produkcije
 - Preporučeno: ukloniti seed u produkcijskom Dockerfile-u ili koristiti env varijable za admin lozinku
 
 ---

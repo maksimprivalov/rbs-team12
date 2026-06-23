@@ -1,4 +1,4 @@
-# Testni primeri — Oblak platforma
+﻿# Testni primeri - Oblak platforma
 
 Ovaj folder sadrži testne Python funkcije za verifikaciju bezbednosnog ponašanja platforme.  
 Testovi su podeljeni u dve kategorije: **benigni** (treba da prođu) i **maliciozni** (treba da budu odbijeni ili sandboxovani).
@@ -9,17 +9,17 @@ Testovi su podeljeni u dve kategorije: **benigni** (treba da prođu) i **malicio
 
 ```
 tests/
-├── benign/
-│   ├── hello_world.py        # Hello World — osnovni test
-│   ├── math_compute.py       # Računanje prostih brojeva
-│   ├── with_requirements.py  # Koristi 'requests' biblioteku
-│   └── requirements.txt      # requests==2.31.0
-└── malicious/
-    ├── shell_exec.py         # Shell injection (os.system, subprocess, eval)
-    ├── read_host_files.py    # Čitanje /etc/passwd, /etc/shadow
-    ├── network_scan.py       # Skeniranje portova
-    ├── infinite_loop.py      # Beskonačna petlja (timeout test)
-    └── fork_bomb.py          # Fork bomb / resource exhaustion
++-- benign/
+|   +-- hello_world.py        # Hello World - osnovni test
+|   +-- math_compute.py       # Računanje prostih brojeva
+|   +-- with_requirements.py  # Koristi 'requests' biblioteku
+|   +-- requirements.txt      # requests==2.31.0
++-- malicious/
+    +-- shell_exec.py         # Shell injection (os.system, subprocess, eval)
+    +-- read_host_files.py    # Čitanje /etc/passwd, /etc/shadow
+    +-- network_scan.py       # Skeniranje portova
+    +-- infinite_loop.py      # Beskonačna petlja (timeout test)
+    +-- fork_bomb.py          # Fork bomb / resource exhaustion
 ```
 
 ---
@@ -48,7 +48,7 @@ curl -X POST http://localhost:8000/invoke/<id> \
 
 ## Benigni testovi
 
-### 1. `hello_world.py` — Hello World
+### 1. `hello_world.py` - Hello World
 
 ```python
 def main():
@@ -65,7 +65,7 @@ main()
 
 ---
 
-### 2. `math_compute.py` — Sieve of Eratosthenes
+### 2. `math_compute.py` - Sieve of Eratosthenes
 
 ```python
 def sieve(n):
@@ -83,7 +83,7 @@ print(f"Prvih {len(primes)} prostih brojeva do 100: {primes}")
 
 ---
 
-### 3. `with_requirements.py` — HTTP zahtev sa `requests`
+### 3. `with_requirements.py` - HTTP zahtev sa `requests`
 
 ```python
 import requests
@@ -101,13 +101,13 @@ print(f"Status: {response.status_code}")
 | Status | READY |
 | Invoke | `Status: 200`, `exit_code: 0` |
 
-**Napomena o sandboxu:** Ovaj test demonstrira da sandbox ne blokira mrežni pristup na procesnom nivou — to je otvorena stavka (SR-01). Zaštita dolazi od verifikatora koji odbija kod sa jasnim malicioznim mrežnim obrascima.
+**Napomena o sandboxu:** Ovaj test demonstrira da sandbox ne blokira mrežni pristup na procesnom nivou - to je otvorena stavka (SR-01). Zaštita dolazi od verifikatora koji odbija kod sa jasnim malicioznim mrežnim obrascima.
 
 ---
 
 ## Maliciozni testovi
 
-### 4. `shell_exec.py` — Shell injection
+### 4. `shell_exec.py` - Shell injection
 
 ```python
 import os, subprocess
@@ -121,11 +121,11 @@ eval("print('injected')")
 | Bandit | HIGH: B602 (shell=True), B605 (os.system) | Shell injection |
 | LLM | MALICIOUS | Jasni shell execution obrasci |
 | Status | **REJECTED** | Bandit HIGH nalaz |
-| Invoke | N/A — funkcija odbačena pre READY statusa | — |
+| Invoke | N/A - funkcija odbačena pre READY statusa | - |
 
 ---
 
-### 5. `read_host_files.py` — Čitanje osetljivih fajlova
+### 5. `read_host_files.py` - Čitanje osetljivih fajlova
 
 ```python
 with open("/etc/passwd", "r") as f:
@@ -139,13 +139,13 @@ with open("/etc/shadow", "r") as f:
 | Bandit | 0 HIGH nalaza (Bandit ne detektuje ovo) | Nema shell poziva |
 | LLM | MALICIOUS / SUSPICIOUS | Eksplicitni pokušaj čitanja sistemskih fajlova |
 | Status | **REJECTED** | LLM verdict |
-| Invoke | N/A | — |
+| Invoke | N/A | - |
 
-**Napomena:** Ovaj test pokazuje važnost LLM sloja — Bandit sam ne bi uhvatio ovaj obrazac. Sandbox kao fallback: čak i da prođe analizu, `/etc/shadow` je čitljiv samo od root-a i koda koji se pokrene u Docker kontekstu nema pristupa.
+**Napomena:** Ovaj test pokazuje važnost LLM sloja - Bandit sam ne bi uhvatio ovaj obrazac. Sandbox kao fallback: čak i da prođe analizu, `/etc/shadow` je čitljiv samo od root-a i koda koji se pokrene u Docker kontekstu nema pristupa.
 
 ---
 
-### 6. `network_scan.py` — Skeniranje portova
+### 6. `network_scan.py` - Skeniranje portova
 
 ```python
 import socket
@@ -160,11 +160,11 @@ def scan_ports(host, start, end):
 | Bandit | 0 HIGH nalaza | socket API nije po sebi HIGH |
 | LLM | MALICIOUS | Pattern skeniranja portova je jasan |
 | Status | **REJECTED** | LLM verdict |
-| Invoke | N/A | — |
+| Invoke | N/A | - |
 
 ---
 
-### 7. `infinite_loop.py` — Timeout test
+### 7. `infinite_loop.py` - Timeout test
 
 ```python
 while True:
@@ -176,13 +176,13 @@ while True:
 | Bandit | 0 HIGH nalaza | Nema opasnih API poziva |
 | LLM | SAFE ili SUSPICIOUS | Beskonačna petlja je ambivalentna |
 | Status | **READY** (ako LLM ne odbaci) ili REJECTED | Zavisi od LLM verdikta |
-| Invoke | `exit_code: -1`, `timed_out: true`, `duration_ms ≈ 30000` | Hard timeout od 30s |
+| Invoke | `exit_code: -1`, `timed_out: true`, `duration_ms ~ 30000` | Hard timeout od 30s |
 
 **Napomena:** Ovaj test verifikuje da sandbox timeout mehanizam radi ispravno. Čak i ako kod prođe analizu, izvršavanje se prekida posle 30 sekundi.
 
 ---
 
-### 8. `fork_bomb.py` — Resource exhaustion
+### 8. `fork_bomb.py` - Resource exhaustion
 
 ```python
 import os, subprocess
@@ -196,7 +196,7 @@ while True:
 | Bandit | HIGH: B603 (`subprocess.Popen`) | subprocess poziv |
 | LLM | MALICIOUS | Fork bomb pattern je prepoznatljiv |
 | Status | **REJECTED** | Bandit HIGH + LLM MALICIOUS |
-| Invoke | N/A | — |
+| Invoke | N/A | - |
 
 **Napomena:** Ako bi hipotetički prošao analizu, `RLIMIT_NPROC=50` u sandboxu ograničava broj procesa i štiti host od fork bomb napada.
 
@@ -216,5 +216,5 @@ while True:
 | `fork_bomb.py` | **NE** (Bandit HIGH + LLM) | **NE** | RLIMIT_NPROC |
 
 Sistem implementira **odbranu u dubini** (defense-in-depth):
-1. **Verifikator** kao prva linija — odbija većinu malicioznog koda pre izvršavanja
-2. **Sandbox** kao fallback — resource limiti i timeout štite host čak i ako verifikator promaši
+1. **Verifikator** kao prva linija - odbija većinu malicioznog koda pre izvršavanja
+2. **Sandbox** kao fallback - resource limiti i timeout štite host čak i ako verifikator promaši

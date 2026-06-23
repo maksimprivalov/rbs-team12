@@ -1,4 +1,4 @@
-# API Dokumentacija - Oblak
+﻿# API Dokumentacija - Oblak
 
 > Base URL: `http://localhost:8000`  
 > Autentikacija: `Authorization: Bearer <JWT_TOKEN>`
@@ -24,7 +24,7 @@ Registracija novog korisnika.
   "created_at": "2025-01-01T12:00:00"
 }
 ```
-**Greške:** `409` username zauzet, `422` validacija (username 3–64 alfanumerička, password min 6)
+**Greške:** `409` username zauzet, `422` validacija (username 3-64 alfanumerička, password min 6)
 
 ---
 
@@ -86,8 +86,8 @@ Upload Python funkcije. Automatski pokreće analizu u pozadini.
 
 **Status tok:**
 ```
-PENDING → ANALYZING → READY      (analiza prošla, invoke_url generisan)
-                     → REJECTED  (analiza odbila ili pip install pao)
+PENDING -> ANALYZING -> READY      (analiza prošla, invoke_url generisan)
+                     -> REJECTED  (analiza odbila ili pip install pao)
 ```
 
 **Greške:** `401` nije autentikovan, `413` fajl prevelik, `422` pogrešan tip fajla
@@ -184,7 +184,7 @@ Lista svih audit log unosa, sortirana od najnovijeg ka najstarijem. Samo admin k
 **Query parametri:**
 | Parametar | Tip | Default | Opis |
 |---|---|---|---|
-| `limit` | int | 100 | Broj unosa (1–1000) |
+| `limit` | int | 100 | Broj unosa (1-1000) |
 | `offset` | int | 0 | Offset za paginaciju |
 
 **Response 200:**
