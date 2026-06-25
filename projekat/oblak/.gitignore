@@ -31,6 +31,9 @@ env/
 # Storage (user uploads)
 storage/
 
+# Firecracker artefakti (kernel/rootfs - veliki binarni fajlovi, prave se skriptama)
+fc-assets/
+
 # IDE
 .vscode/
 .idea/
