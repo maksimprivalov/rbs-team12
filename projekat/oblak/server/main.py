@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from db import Base, engine
-from routes.admin import router as admin_router
 from routes.auth import router as auth_router
 from routes.functions import router as functions_router
 from routes.invoke import router as invoke_router
@@ -25,7 +24,6 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 app.include_router(auth_router)
 app.include_router(functions_router)
 app.include_router(invoke_router)
-app.include_router(admin_router)
 
 
 @app.get("/health")

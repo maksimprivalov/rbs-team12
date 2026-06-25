@@ -7,21 +7,10 @@ services:
       - "8000:8000"
     volumes:
       - ./storage:/app/storage
-      # Firecracker infrastruktura — montira se samo ako postoji na hostu
-      # Pokrenuti scripts/setup-firecracker.sh pre prvog pokretanja
-      - /opt/firecracker:/opt/firecracker:ro
     environment:
       - DATABASE_URL=sqlite:///./oblak.db
       - SECRET_KEY=dev-secret-change-in-prod
       - STORAGE_PATH=/app/storage
-      # Putanje do Firecracker komponenti (opciono — defaults odgovaraju)
-      # - FIRECRACKER_BIN=/usr/local/bin/firecracker
-      # - FC_KERNEL=/opt/firecracker/vmlinux.bin
-      # - FC_ROOTFS=/opt/firecracker/python.ext4
-    devices:
-      # KVM pristup za Firecracker MicroVM — dostupan samo na Linux hostu sa KVM
-      # Komentarišite ovu liniju ako pokretate na Windows/Mac (sandbox fallback)
-      - /dev/kvm:/dev/kvm
     depends_on: []
     restart: unless-stopped
 

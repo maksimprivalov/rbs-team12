@@ -8,13 +8,17 @@
 ## Autentikacija
 
 ### POST /auth/register
+
 Registracija novog korisnika.
 
 **Request:**
+
 ```json
 { "username": "alice", "password": "alice123" }
 ```
+
 **Response 201:**
+
 ```json
 {
   "id": 1,
@@ -24,29 +28,37 @@ Registracija novog korisnika.
   "created_at": "2025-01-01T12:00:00"
 }
 ```
+
 **Greške:** `409` username zauzet, `422` validacija (username 3-64 alfanumerička, password min 6)
 
 ---
 
 ### POST /auth/login
+
 Prijava i dobijanje JWT tokena.
 
 **Request:**
+
 ```json
 { "username": "alice", "password": "alice123" }
 ```
+
 **Response 200:**
+
 ```json
 { "access_token": "eyJ...", "token_type": "bearer" }
 ```
+
 **Greške:** `401` pogrešni kredencijali
 
 ---
 
 ### GET /auth/me
+
 Provera tokena i detalji trenutnog korisnika.
 
 **Response 200:**
+
 ```json
 {
   "id": 1,
@@ -56,6 +68,7 @@ Provera tokena i detalji trenutnog korisnika.
   "created_at": "2025-01-01T12:00:00"
 }
 ```
+
 **Greške:** `401` nevažeći/istekli token
 
 ---
@@ -63,17 +76,19 @@ Provera tokena i detalji trenutnog korisnika.
 ## Funkcije
 
 ### POST /functions/upload
+
 Upload Python funkcije. Automatski pokreće analizu u pozadini.
 
 **Content-Type:** `multipart/form-data`
 
-| Polje | Tip | Obavezno | Opis |
-|---|---|----------|---|
-| `name` | string (query) | DA       | Naziv funkcije |
-| `file` | `.py` fajl | DA       | Python kod (max 10MB, mora se zvati `main.py` pri čuvanju) |
-| `requirements` | `requirements.txt` | NE       | Zavisnosti |
+| Polje          | Tip                | Obavezno | Opis                                                       |
+| -------------- | ------------------ | -------- | ---------------------------------------------------------- |
+| `name`         | string (query)     | DA       | Naziv funkcije                                             |
+| `file`         | `.py` fajl         | DA       | Python kod (max 10MB, mora se zvati `main.py` pri čuvanju) |
+| `requirements` | `requirements.txt` | NE       | Zavisnosti                                                 |
 
 **Response 201:**
+
 ```json
 {
   "id": 5,
@@ -85,6 +100,7 @@ Upload Python funkcije. Automatski pokreće analizu u pozadini.
 ```
 
 **Status tok:**
+
 ```
 PENDING -> ANALYZING -> READY      (analiza prošla, invoke_url generisan)
                      -> REJECTED  (analiza odbila ili pip install pao)
@@ -95,19 +111,34 @@ PENDING -> ANALYZING -> READY      (analiza prošla, invoke_url generisan)
 ---
 
 ### GET /functions/
+
 Lista svih funkcija trenutnog korisnika.
 
 **Response 200:**
+
 ```json
 [
-  { "id": 5, "name": "moja-funkcija", "status": "READY", "invoke_url": "/invoke/abc123...", "created_at": "..." },
-  { "id": 6, "name": "druga", "status": "REJECTED", "invoke_url": null, "created_at": "..." }
+  {
+    "id": 5,
+    "name": "moja-funkcija",
+    "status": "READY",
+    "invoke_url": "/invoke/abc123...",
+    "created_at": "..."
+  },
+  {
+    "id": 6,
+    "name": "druga",
+    "status": "REJECTED",
+    "invoke_url": null,
+    "created_at": "..."
+  }
 ]
 ```
 
 ---
 
 ### GET /functions/{id}
+
 Detalji jedne funkcije.
 
 **Response 200:** isto kao element liste gore  
@@ -116,9 +147,11 @@ Detalji jedne funkcije.
 ---
 
 ### GET /functions/{id}/analysis
+
 Rezultati analize koda (Bandit + pylint + LLM).
 
 **Response 200:**
+
 ```json
 {
   "function_id": 5,
@@ -135,8 +168,11 @@ Rezultati analize koda (Bandit + pylint + LLM).
 ```
 
 **Response 202** (analiza još u toku):
+
 ```json
-{ "detail": "Analiza je u toku (status=ANALYZING). Pokušaj ponovo za nekoliko sekundi." }
+{
+  "detail": "Analiza je u toku (status=ANALYZING). Pokušaj ponovo za nekoliko sekundi."
+}
 ```
 
 **Greške:** `404` nema rezultata analize
@@ -145,15 +181,12 @@ Rezultati analize koda (Bandit + pylint + LLM).
 
 ## Izvršavanje
 
-### POST /invoke/{token}
-
-Pokretanje funkcije. `token` može biti:
-- Integer `function_id` (autentikovan korisnik, mora biti vlasnik)
-- UUID hex string iz `invoke_url` polja funkcije (autentikovan korisnik)
+### POST /invoke/{id}
 
 Funkcija mora biti u statusu `READY`. Svaki poziv se beleži u `audit_log`.
 
 **Response 200:**
+
 ```json
 {
   "output": "Hello from Oblak!\n",
@@ -163,6 +196,7 @@ Funkcija mora biti u statusu `READY`. Svaki poziv se beleži u `audit_log`.
 ```
 
 **Timeout response 200** (izvršavanje trajalo >30s):
+
 ```json
 {
   "output": "Execution timed out after 30 seconds.",
@@ -188,6 +222,7 @@ Lista svih audit log unosa, sortirana od najnovijeg ka najstarijem. Samo admin k
 | `offset` | int | 0 | Offset za paginaciju |
 
 **Response 200:**
+
 ```json
 [
   {
@@ -208,10 +243,10 @@ Lista svih audit log unosa, sortirana od najnovijeg ka najstarijem. Samo admin k
 
 ## Statusi funkcija
 
-| Status | Opis                                                  |
-|---|-------------------------------------------------------|
-| `PENDING` | Uploadovana, čeka analizu                             |
+| Status      | Opis                                                  |
+| ----------- | ----------------------------------------------------- |
+| `PENDING`   | Uploadovana, čeka analizu                             |
 | `ANALYZING` | Analiza u toku (Bandit + pylint + LLM)                |
-| `SAFE` | Analiza prošla, pip install u toku                    |
-| `READY` | Spremna za izvršavanje, invoke_url dostupan           |
-| `REJECTED` | Analiza odbila ili pip install pao - fajlovi obrisani |
+| `SAFE`      | Analiza prošla, pip install u toku                    |
+| `READY`     | Spremna za izvršavanje, invoke_url dostupan           |
+| `REJECTED`  | Analiza odbila ili pip install pao - fajlovi obrisani |
