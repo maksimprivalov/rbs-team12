@@ -81,3 +81,26 @@ def invoke(function_id: int) -> dict:
         resp = client.post(f"/invoke/{function_id}")
     _handle_error(resp)
     return resp.json()
+
+
+def audit(
+    mine: bool = False,
+    user_id: int | None = None,
+    action: str | None = None,
+    function_id: int | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    params: dict = {"limit": limit, "offset": offset}
+    if action:
+        params["action"] = action
+    path = "/audit/me" if mine else "/audit/"
+    if not mine:
+        if user_id is not None:
+            params["user_id"] = user_id
+        if function_id is not None:
+            params["function_id"] = function_id
+    with _client() as client:
+        resp = client.get(path, params=params)
+    _handle_error(resp)
+    return resp.json()

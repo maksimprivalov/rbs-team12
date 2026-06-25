@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -42,8 +43,8 @@ def whoami() -> None:
 @app.command()
 def deploy(
     file: Path = typer.Argument(..., help="Python file to deploy"),
-    requirements: Path | None = typer.Option(None, "--requirements", "-r", help="requirements.txt"),
-    name: str | None = typer.Option(None, "--name", "-n", help="Function name (default: filename)"),
+    requirements: Optional[Path] = typer.Option(None, "--requirements", "-r", help="requirements.txt"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Function name (default: filename)"),
 ) -> None:
     """Deploy a Python function to Oblak."""
     if not file.exists():
@@ -127,3 +128,39 @@ def invoke(function_id: int = typer.Argument(..., help="Function ID")) -> None:
     if result.get("stderr"):
         console.print("[bold]stderr:[/bold]")
         console.print(result["stderr"], style="red", end="")
+
+
+@app.command()
+def audit(
+    mine: bool = typer.Option(False, "--mine", help="Samo moji logovi (umesto svih — sve je admin-only)"),
+    user_id: Optional[int] = typer.Option(None, "--user-id", help="Filter po korisniku (admin)"),
+    action: Optional[str] = typer.Option(None, "--action", help="Filter po akciji, npr. FUNCTION_INVOKE_DONE"),
+    function_id: Optional[int] = typer.Option(None, "--function-id", help="Filter po funkciji (admin)"),
+    limit: int = typer.Option(50, "--limit", help="Maks broj redova (1-500)"),
+    offset: int = typer.Option(0, "--offset", help="Preskoči prvih N"),
+) -> None:
+    """Show audit logs (default: all — admin; --mine for your own)."""
+    page = api.audit(
+        mine=mine, user_id=user_id, action=action,
+        function_id=function_id, limit=limit, offset=offset,
+    )
+    items = page["items"]
+    if not items:
+        console.print("Nema logova.")
+        return
+
+    table = Table("ID", "Time", "User", "Action", "Details")
+    for log in items:
+        who = log.get("username") or (str(log["user_id"]) if log.get("user_id") is not None else "—")
+        table.add_row(
+            str(log["id"]),
+            log["timestamp"][:19],
+            who,
+            log["action"],
+            (log.get("details") or "")[:60],
+        )
+    console.print(table)
+    console.print(
+        f"[dim]Prikazano {len(items)} od {page['total']} "
+        f"(offset={page['offset']}, limit={page['limit']})[/dim]"
+    )

@@ -13,17 +13,18 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy.orm import Session
-
 from config import settings
 from models import AuditLog, Function, FunctionStatus
 from models.analysis import AnalysisResult
 from services.verifier import analyze_function_code
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 
-def _install_requirements(function_dir: Path, function_id: int) -> tuple[bool, str | None]:
+def _install_requirements(
+    function_dir: Path, function_id: int
+) -> tuple[bool, str | None]:
     """
     Pokreće pip install -r requirements.txt u izolovanom venv poddirektorijumu
     Vraća (uspeh, poruka_greške)
@@ -39,9 +40,12 @@ def _install_requirements(function_dir: Path, function_id: int) -> tuple[bool, s
     try:
         result = subprocess.run(
             [
-                "pip", "install",
-                "-r", str(req_file),
-                "--target", str(venv_dir),
+                "pip",
+                "install",
+                "-r",
+                str(req_file),
+                "--target",
+                str(venv_dir),
                 "--quiet",
                 "--no-cache-dir",
             ],
@@ -83,19 +87,23 @@ def _reject(func: Function, analysis: AnalysisResult, reason: str, db: Session) 
     func.status = FunctionStatus.REJECTED
     analysis.final_verdict = "REJECTED"
     analysis.rejection_reason = reason
-    db.add(AuditLog(
-        user_id=func.user_id,
-        action="FUNCTION_ANALYSIS_REJECTED",
-        details=f"function_id={func.id} reason={reason[:300]}",
-        timestamp=datetime.utcnow(),
-    ))
+    db.add(
+        AuditLog(
+            user_id=func.user_id,
+            action="FUNCTION_ANALYSIS_REJECTED",
+            details=f"function_id={func.id} reason={reason[:300]}",
+            timestamp=datetime.utcnow(),
+        )
+    )
 
 
 def run_analysis_pipeline(function_id: int, db: Session) -> None:
     """
     Entry point koji se poziva iz BackgroundTasks u routes/functions.py
     """
-    func: Function | None = db.query(Function).filter(Function.id == function_id).first()
+    func: Function | None = (
+        db.query(Function).filter(Function.id == function_id).first()
+    )
     if not func:
         logger.error("pipeline: function_id=%d nije u bazi", function_id)
         return
@@ -143,16 +151,19 @@ def run_analysis_pipeline(function_id: int, db: Session) -> None:
             return
 
         # Korak 3: Generisanje invoke URL-a
-        invoke_url = _generate_invoke_url(func.id)
+        # invoke_url = _generate_invoke_url(func.id)
+        invoke_url = f"/invoke/{func.id}"
         func.invoke_url = invoke_url
         func.status = FunctionStatus.READY
 
-        db.add(AuditLog(
-            user_id=func.user_id,
-            action="FUNCTION_READY",
-            details=f"function_id={func.id} invoke_url={invoke_url}",
-            timestamp=datetime.utcnow(),
-        ))
+        db.add(
+            AuditLog(
+                user_id=func.user_id,
+                action="FUNCTION_READY",
+                details=f"function_id={func.id} invoke_url={invoke_url}",
+                timestamp=datetime.utcnow(),
+            )
+        )
         db.commit()
         logger.info("function_id=%d READY → %s", func.id, invoke_url)
 
@@ -162,12 +173,14 @@ def run_analysis_pipeline(function_id: int, db: Session) -> None:
             func.status = FunctionStatus.REJECTED
             analysis.final_verdict = "REJECTED"
             analysis.rejection_reason = f"Internal error: {str(e)[:200]}"
-            db.add(AuditLog(
-                user_id=func.user_id,
-                action="FUNCTION_ANALYSIS_ERROR",
-                details=f"function_id={func.id} error={str(e)[:300]}",
-                timestamp=datetime.utcnow(),
-            ))
+            db.add(
+                AuditLog(
+                    user_id=func.user_id,
+                    action="FUNCTION_ANALYSIS_ERROR",
+                    details=f"function_id={func.id} error={str(e)[:300]}",
+                    timestamp=datetime.utcnow(),
+                )
+            )
             db.commit()
         except Exception:  # noqa: BLE001
             logger.error("pipeline: ne mogu da commitam error state")
