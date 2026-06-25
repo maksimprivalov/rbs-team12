@@ -1,13 +1,17 @@
 import secrets
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, field_validator
-from sqlalchemy.orm import Session
-
 from db import get_db
+from fastapi import APIRouter, Depends, HTTPException, status
 from models import AuditLog, User
-from security import create_access_token, get_current_user, hash_password, verify_password
+from pydantic import BaseModel, field_validator
+from security import (
+    create_access_token,
+    get_current_user,
+    hash_password,
+    verify_password,
+)
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -21,7 +25,7 @@ class RegisterRequest(BaseModel):
     def username_valid(cls, v: str) -> str:
         v = v.strip()
         if len(v) < 3 or len(v) > 64:
-            raise ValueError("Username must be 3–64 characters")
+            raise ValueError("Username must be 3-64 characters")
         if not v.isalnum():
             raise ValueError("Username must be alphanumeric")
         return v
@@ -54,10 +58,14 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 def register(body: RegisterRequest, db: Session = Depends(get_db)) -> User:
     if db.query(User).filter(User.username == body.username).first():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Username already taken"
+        )
     user = User(
         username=body.username,
         hashed_password=hash_password(body.password),
@@ -76,14 +84,18 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> User:
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> dict:
     user = db.query(User).filter(User.username == body.username).first()
     if not user or not verify_password(body.password, user.hashed_password):
-        db.add(AuditLog(
-            user_id=user.id if user else None,
-            action="LOGIN_FAILED",
-            details=f"username={body.username}",
-            timestamp=datetime.utcnow(),
-        ))
+        db.add(
+            AuditLog(
+                user_id=user.id if user else None,
+                action="LOGIN_FAILED",
+                details=f"username={body.username}",
+                timestamp=datetime.utcnow(),
+            )
+        )
         db.commit()
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
     db.add(AuditLog(user_id=user.id, action="LOGIN", timestamp=datetime.utcnow()))
     db.commit()
     return {"access_token": create_access_token(user.id)}
