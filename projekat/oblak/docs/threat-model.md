@@ -1,4 +1,4 @@
-# Threat Model - Oblak platforma
+﻿# Threat Model - Oblak platforma
 
 > Metodologija: STRIDE  
 
@@ -21,18 +21,18 @@ Oblak je serverless platforma za izvršavanje korisničkog Python koda. Sistem s
 ### Dijagram toka podataka (DFD)
 
 ```
-[Korisnik] ──(HTTPS)──► [CDK CLI] ──(HTTPS/JWT)──► [Server]
-                                                        │
-                                         ┌──────────────┼──────────────┐
-                                         ▼              ▼              ▼
+[Korisnik] --(HTTPS)--> [CDK CLI] --(HTTPS/JWT)--> [Server]
+                                                        |
+                                         +--------------+--------------+
+                                         v              v              v
                                    [Code Storage] [Code Verifier] [Baza podataka]
-                                         │              │
-                                         └──────┬───────┘
-                                                ▼
+                                         |              |
+                                         +------+-------+
+                                                v
                                     [Firecracker Orchestrator]
-                                                │
-                                         ┌──────┴──────┐
-                                         ▼      ▼      ▼
+                                                |
+                                         +------+------+
+                                         v      v      v
                                        [MVM] [MVM] [MVM]
 ```
 
@@ -40,7 +40,7 @@ Oblak je serverless platforma za izvršavanje korisničkog Python koda. Sistem s
 
 ## 2. STRIDE analiza po komponentama
 
-### 2.1 CDK CLI ↔ Server komunikacija
+### 2.1 CDK CLI <-> Server komunikacija
 
 #### S - Spoofing (Lažno predstavljanje)
 
@@ -230,7 +230,7 @@ Oblak je serverless platforma za izvršavanje korisničkog Python koda. Sistem s
 
 | Komponenta | HIGH rizici | MEDIUM rizici | LOW rizici |
 |---|---|---|---|
-| CLI ↔ Server | 3 | 4 | 1 |
+| CLI <-> Server | 3 | 4 | 1 |
 | Code Storage | 3 | 2 | 0 |
 | Code Verifier | 2 | 3 | 1 |
 | Firecracker Orchestrator | 5 | 3 | 0 |
