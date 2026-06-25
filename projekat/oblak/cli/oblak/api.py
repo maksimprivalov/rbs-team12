@@ -6,7 +6,7 @@ import typer
 from oblak.config import get_server_url, get_token
 
 
-def _client() -> httpx.Client:
+def _client(timeout: float = 30) -> httpx.Client:
     token = get_token()
     if not token:
         typer.echo("Not logged in. Run: oblak login", err=True)
@@ -14,7 +14,7 @@ def _client() -> httpx.Client:
     return httpx.Client(
         base_url=get_server_url(),
         headers={"Authorization": f"Bearer {token}"},
-        timeout=30,
+        timeout=timeout,
     )
 
 
@@ -62,5 +62,45 @@ def list_functions() -> list[dict]:
 def get_function(function_id: int) -> dict:
     with _client() as client:
         resp = client.get(f"/functions/{function_id}")
+    _handle_error(resp)
+    return resp.json()
+
+
+def get_analysis(function_id: int) -> dict:
+    with _client() as client:
+        resp = client.get(f"/functions/{function_id}/analysis")
+    if resp.status_code == 202:
+        return {"final_verdict": "PENDING", "rejection_reason": None}
+    _handle_error(resp)
+    return resp.json()
+
+
+def invoke(function_id: int) -> dict:
+    # Izvršavanje u microVM-u može da potraje (boot + kod + timeout), pa duži timeout
+    with _client(timeout=120) as client:
+        resp = client.post(f"/invoke/{function_id}")
+    _handle_error(resp)
+    return resp.json()
+
+
+def audit(
+    mine: bool = False,
+    user_id: int | None = None,
+    action: str | None = None,
+    function_id: int | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    params: dict = {"limit": limit, "offset": offset}
+    if action:
+        params["action"] = action
+    path = "/audit/me" if mine else "/audit/"
+    if not mine:
+        if user_id is not None:
+            params["user_id"] = user_id
+        if function_id is not None:
+            params["function_id"] = function_id
+    with _client() as client:
+        resp = client.get(path, params=params)
     _handle_error(resp)
     return resp.json()

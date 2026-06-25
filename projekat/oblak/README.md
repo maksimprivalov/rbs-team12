@@ -129,7 +129,9 @@ oblak/
 | POST | `/functions/upload` | Upload `.py` fajla |
 | GET | `/functions/` | Lista funkcija korisnika |
 | GET | `/functions/{id}` | Detalji funkcije |
-| POST | `/invoke/{id}` | Izvršavanje funkcije (stub) |
+| POST | `/invoke/{id}` | Izvršavanje funkcije u Firecracker microVM-u |
+| GET | `/audit/` | Svi audit logovi (admin), sa filtrima i paginacijom |
+| GET | `/audit/me` | Audit logovi trenutnog korisnika |
 
 Puna dokumentacija: `http://localhost:8000/docs`
 
