@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
 
-CONFIG_DIR = Path.home() / ".oblak"
+# CONFIG_DIR = Path.home() / ".oblak"
+CONFIG_DIR = Path(__file__).parent.parent / "config"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 
